@@ -44,12 +44,23 @@ En un servicio con HTTPS administrado por el proveedor, configura:
 | `SPRING_PROFILES_ACTIVE` | `demo,cloud` |
 | `MONGODB_URI` | Conexión de Atlas, guardada como secreto en el proveedor, nunca en Git |
 | `MONGODB_DATABASE` | Base separada para la demostración, por ejemplo `nexo_eventos_demo` |
-| `NEXO_BASE_URL` | URL pública completa, por ejemplo `https://tu-app.ejemplo.com` |
+| `NEXO_BASE_URL` | URL pública completa, por ejemplo `https://tu-app.ejemplo.com`; en Render se obtiene automáticamente de `RENDER_EXTERNAL_URL` si no se configura |
 | `PORT` | Puerto indicado por el proveedor; si no existe, se usa `SERVER_PORT` o `8080` |
 
 El perfil `cloud` escucha en `0.0.0.0`, reconoce el HTTPS del proxy y marca la cookie de sesión como segura. No actives el perfil `tls` cuando el proveedor termina HTTPS en su proxy. Restringe el acceso de Atlas a las direcciones de salida del servicio. La ruta `/` permite comprobar que el servidor responde.
 
 Esta entrega usa cuentas públicas de demostración, pagos simulados y un buzón de pruebas; utiliza únicamente datos ficticios en el despliegue. Las sesiones se guardan en memoria y se pierden cuando la instancia reinicia. MongoDB conserva los datos de la aplicación.
+
+### Render gratuito
+
+El [Blueprint de Render](render.yaml) define un servicio Docker gratuito en Virginia, una base independiente `nexo_eventos_demo` en tu Atlas y despliegues manuales. No crea otra base de datos de pago en Render.
+
+1. En Render, crea un **Blueprint** desde este repositorio y la rama `main`.
+2. Introduce `MONGODB_URI` cuando Render lo solicite; ese valor no se guarda en el Blueprint ni en Git. Utiliza un usuario de Atlas con acceso únicamente a la base de demostración.
+3. En el servicio, consulta **Connect → Outbound** y autoriza esos rangos en la lista de acceso de red de Atlas. No es necesario permitir todas las IP.
+4. Ejecuta el despliegue y verifica la URL HTTPS que asigne Render. Si configuras un dominio propio, establece `NEXO_BASE_URL` con esa URL.
+
+El plan gratuito se suspende tras 15 minutos sin tráfico y puede tardar aproximadamente un minuto en volver a responder. Consulta sus [límites y condiciones](https://render.com/docs/free); no actives un plan de pago para esta demo.
 
 ## Cuentas de demostración
 

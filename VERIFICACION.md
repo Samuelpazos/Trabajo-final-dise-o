@@ -39,6 +39,13 @@ Una historia se marca como **verificada** en el entorno indicado cuando se ejecu
 | HU-31 | Seguridad y privacidad → Solicitar eliminación → Procesar | Verificada por HTTP. Reautenticación, anonimización y auditoría sin los datos originales. Por decisión del usuario, el intento posterior muestra el error genérico de credenciales. |
 | HU-32 | Seguridad y privacidad → TLS, roles y copias | Verificación parcial. Se probaron permisos, sesión y mapeo BSON de datos eliminados. Certificado de confianza y copias de Atlas quedaron bloqueados por falta de infraestructura configurada. |
 
+## Preparación de Render y revisión de dependencias (25 de noviembre de 2026)
+
+- Se añadió un Blueprint gratuito de Render con Docker, perfil `demo,cloud`, URL HTTPS automática y la base separada `nexo_eventos_demo` en Atlas. La creación del servicio y la comprobación de su URL pública están pendientes del inicio de sesión en Render.
+- Se aplicaron parches compatibles a Jackson (2.21.9), Tomcat (10.1.62), Log4j (2.25.5) y Commons Lang (3.18.0). Se mantuvo Spring Boot 3.5.16: es la última versión pública disponible de esa rama al realizar la comprobación en Maven Central.
+- La nueva ejecución de `FlujosTest` y `MapeoMongoTest` pasó: 11 casos contabilizados, 10 aprobados, 1 omitido, sin fallos ni errores. Estas pruebas no sustituyen la integración completa con Atlas.
+- El análisis de dependencias pasó de 22 a 2 alertas conocidas. **No se declara libre de CVE**: siguen presentes CVE-2026-47884 y CVE-2026-47890 en Spring MVC 6.2.19. Los escáneres las clasifican como críticas, pero los avisos oficiales de Spring indican severidad [media para XsltView](https://spring.io/security/cve-2026-47884/) y [baja para fragmentos enviados por SSE](https://spring.io/security/cve-2026-47890/). No se encontraron vistas XSLT ni fragmentos SSE en el código actual; esta revisión de aplicabilidad no equivale a corregir la dependencia. Requieren actualizar a Spring 7.0.9 o superior, o contratar el parche empresarial de Spring 6.2.20. Esa migración mayor se deja pendiente, sin introducirla silenciosamente en el despliegue de demostración.
+
 ## Verificaciones pendientes y bloqueadas
 
 - **Atlas.** La suite real queda disponible como `FlujosAtlasTest`. Las transacciones concurrentes, los índices y la persistencia después de reiniciar deben verificarse contra un clúster de pruebas.

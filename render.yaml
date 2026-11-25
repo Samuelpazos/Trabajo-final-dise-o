@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: nexo-eventos
+    runtime: docker
+    plan: free
+    region: virginia
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: "off"
+    healthCheckPath: /
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo,cloud
+      - key: MONGODB_DATABASE
+        value: nexo_eventos_demo
+      - key: MONGODB_URI
+        sync: false
