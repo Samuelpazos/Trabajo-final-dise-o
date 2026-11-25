@@ -1,0 +1,154 @@
+{
+  "info": {
+    "name": "Nexo Eventos - API REST",
+    "description": "Flujos principales de los diagramas: acceso, eventos, compras, QR, pagos y reembolsos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "eventoId", "value": "" },
+    { "key": "compraId", "value": "" },
+    { "key": "codigoEntrada", "value": "" },
+    { "key": "csrf", "value": "" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": ["pm.request.headers.upsert({ key: 'X-Nexo-Solicitud', value: 'web' });"]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Acceso y privacidad",
+      "item": [
+        {
+          "name": "Iniciar sesión como asistente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"asistente@nexo.test\",\n  \"clave\": \"NexoDemo2026!\"\n}" },
+            "url": "{{baseUrl}}/api/sesion"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Inicio de sesión correcto', () => pm.response.to.have.status(200));", "const data = pm.response.json();", "pm.collectionVariables.set('csrf', data.csrf);"] } }]
+        },
+        {
+          "name": "Consultar sesión",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/sesion" }
+        },
+        {
+          "name": "Cerrar sesión",
+          "request": { "method": "DELETE", "header": [{ "key": "X-Nexo-CSRF", "value": "{{csrf}}" }], "url": "{{baseUrl}}/api/sesion" }
+        }
+      ]
+    },
+    {
+      "name": "2. Eventos y agenda",
+      "item": [
+        {
+          "name": "Consultar catálogo",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/eventos" }
+        },
+        {
+          "name": "Crear evento",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Nexo-CSRF", "value": "{{csrf}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Evento Postman\",\n  \"descripcion\": \"Evento creado desde la API\",\n  \"inicio\": \"2030-06-15T19:00:00Z\",\n  \"fin\": \"2030-06-15T23:00:00Z\",\n  \"lugar\": \"Bogotá\",\n  \"categoria\": \"Tecnología\",\n  \"capacidad\": 100,\n  \"precio\": 35.50,\n  \"plazoHoras\": 48\n}" },
+            "url": "{{baseUrl}}/api/eventos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Evento creado', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('eventoId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Activar evento",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Nexo-CSRF", "value": "{{csrf}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"ACTIVO\",\n  \"confirmar\": true\n}" },
+            "url": "{{baseUrl}}/api/eventos/{{eventoId}}/estado"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Compras, pagos y reembolsos",
+      "item": [
+        {
+          "name": "Reservar entradas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Nexo-CSRF", "value": "{{csrf}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"cantidad\": 2,\n  \"solicitudId\": \"postman-reserva-001\"\n}" },
+            "url": "{{baseUrl}}/api/compras"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Reserva creada', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('compraId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Simular pago aprobado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Nexo-CSRF", "value": "{{csrf}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"resultado\": \"APROBADO\"\n}" },
+            "url": "{{baseUrl}}/api/demo/compras/{{compraId}}/pago"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Pago aprobado', () => pm.response.to.have.status(200));",
+            "const respuesta = pm.response.json();",
+            "const codigo = respuesta.entradas?.[0]?.codigo;",
+            "if (codigo) pm.collectionVariables.set('codigoEntrada', codigo);"
+          ] } }]
+        },
+        {
+          "name": "Listar mis compras",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/compras" }
+        },
+        {
+          "name": "Cancelar entradas y solicitar reembolso",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Nexo-CSRF", "value": "{{csrf}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"entradas\": [\"{{codigoEntrada}}\"],\n  \"confirmar\": true\n}" },
+            "url": "{{baseUrl}}/api/compras/{{compraId}}/cancelaciones"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Asistencia QR",
+      "item": [
+        {
+          "name": "Validar entrada QR",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Nexo-CSRF", "value": "{{csrf}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"{{codigoEntrada}}\"\n}" },
+            "url": "{{baseUrl}}/api/eventos/{{eventoId}}/asistencia"
+          }
+        },
+        {
+          "name": "Consultar estadísticas de asistencia",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/eventos/{{eventoId}}/asistencia" }
+        }
+      ]
+    },
+    {
+      "name": "5. MongoDB y auditoría",
+      "item": [
+        {
+          "name": "Consultar panel",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/panel" }
+        },
+        {
+          "name": "Consultar auditoría",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/auditoria" }
+        },
+        {
+          "name": "Consultar buzón demo",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/demo/buzon" }
+        }
+      ]
+    }
+  ]
+}

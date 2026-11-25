@@ -1,0 +1,14 @@
+target/
+.m2repo/
+.postman/
+.github/modernize/
+*.log
+.env
+.env.*
+!.env.example
+*.p12
+*.jks
+*.age
+.playwright-cli/
+.idea/
+.vscode/
