@@ -33,6 +33,24 @@ Necesitas un JDK 25 y un clúster de MongoDB Atlas. El proyecto incluye Maven Wr
 
 En macOS o Linux usa `sh ./mvnw clean package` y `java -jar target/nexo-eventos-1.0.0.jar`.
 
+## Despliegue en la nube
+
+El [Dockerfile](Dockerfile) compila con Java 25 y ejecuta la aplicación con un usuario sin privilegios. El archivo [.dockerignore](.dockerignore) excluye credenciales, cachés y archivos de trabajo de la imagen.
+
+En un servicio con HTTPS administrado por el proveedor, configura:
+
+| Variable | Valor |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `demo,cloud` |
+| `MONGODB_URI` | Conexión de Atlas, guardada como secreto en el proveedor, nunca en Git |
+| `MONGODB_DATABASE` | Base separada para la demostración, por ejemplo `nexo_eventos_demo` |
+| `NEXO_BASE_URL` | URL pública completa, por ejemplo `https://tu-app.ejemplo.com` |
+| `PORT` | Puerto indicado por el proveedor; si no existe, se usa `SERVER_PORT` o `8080` |
+
+El perfil `cloud` escucha en `0.0.0.0`, reconoce el HTTPS del proxy y marca la cookie de sesión como segura. No actives el perfil `tls` cuando el proveedor termina HTTPS en su proxy. Restringe el acceso de Atlas a las direcciones de salida del servicio. La ruta `/` permite comprobar que el servidor responde.
+
+Esta entrega usa cuentas públicas de demostración, pagos simulados y un buzón de pruebas; utiliza únicamente datos ficticios en el despliegue. Las sesiones se guardan en memoria y se pierden cuando la instancia reinicia. MongoDB conserva los datos de la aplicación.
+
 ## Cuentas de demostración
 
 La contraseña de las cuatro cuentas es `NexoDemo2026!`. Los botones de la pantalla de acceso completan las credenciales ficticias.

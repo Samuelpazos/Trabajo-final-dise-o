@@ -1,0 +1,10 @@
+# Only application source and build instructions may enter the image context.
+**
+!pom.xml
+!mvnw
+!.mvn/
+!.mvn/**
+!src/
+!src/**
+!Dockerfile
+!.dockerignore
